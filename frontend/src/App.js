@@ -22,27 +22,38 @@ function App() {
 
   const analyzeResume = async () => {
 
-    if(!file){
-      alert("Please upload a resume first");
-      return;
-    }
+  console.log("Analyze button clicked");
 
-    setLoading(true);
+  if (!file) {
+    alert("Please upload a resume first");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("resume", file);
-    formData.append("jobDescription", jobDescription);
+  setLoading(true);
 
-    const response = await fetch("https://resume-analyzer-e2e5.onrender.com", {
+  const formData = new FormData();
+  formData.append("resume", file);
+  formData.append("jobDescription", jobDescription);
+
+  try {
+
+    const response = await fetch("https://resume-analyzer-e2e5.onrender.com/analyze", {
       method: "POST",
       body: formData
     });
 
     const data = await response.json();
 
+    console.log("API Response:", data);
+
     setResult(data);
-    setLoading(false);
-  };
+
+  } catch (error) {
+    console.error("API Error:", error);
+  }
+
+  setLoading(false);
+};
 
   const downloadReport = () => {
 

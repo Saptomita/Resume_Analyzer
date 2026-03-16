@@ -178,7 +178,7 @@ function App() {
                 <h3>Detected Skills</h3>
 
                 <div className="tags">
-                  {result.detectedSkills.map((skill,i)=>(
+                  {(result.detectedSkills || []).map((skill,i)=>(
                     <span className="tag" key={i}>{skill}</span>
                   ))}
                 </div>
@@ -189,7 +189,7 @@ function App() {
                 <h3>Missing Skills</h3>
 
                 <div className="tags">
-                  {result.missingSkills.map((skill,i)=>(
+                  {(result.missingSkills || []).map((skill,i)=>(
                     <span className="tag missing" key={i}>{skill}</span>
                   ))}
                 </div>

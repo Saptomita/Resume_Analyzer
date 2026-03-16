@@ -3,7 +3,52 @@ const multer = require("multer");
 const pdfParse = require("pdf-parse");
 const cors = require("cors");
 const fs = require("fs");
+const natural = require("natural");
 
+const skillDictionary = [
+
+  // Programming / Tech
+  "python","java","c++","c","javascript","typescript","react","angular","vue",
+  "node","express","django","flask","spring boot",
+  "html","css","bootstrap","tailwind",
+  "sql","mysql","postgresql","mongodb",
+  "git","github","docker","kubernetes",
+  "rest api","graphql","microservices",
+  "web development","backend development","frontend development",
+
+  // Data Science / AI
+  "machine learning","deep learning","data science","data analysis",
+  "data visualization","pandas","numpy","scikit learn","tensorflow",
+  "pytorch","nlp","computer vision","statistics","big data",
+  "tableau","power bi","spark","hadoop",
+
+  // Accounting / Finance
+  "financial reporting","accounting","bookkeeping",
+  "tax preparation","gst","auditing","budgeting",
+  "forecasting","tally","quickbooks","excel","financial analysis",
+
+  // Marketing / Business
+  "digital marketing","seo","sem","content marketing",
+  "social media marketing","email marketing",
+  "brand management","market research","sales",
+  "business development","customer relationship management",
+
+  // Project / Management
+  "project management","agile","scrum",
+  "team management","leadership",
+  "risk management","strategic planning",
+
+  // Design
+  "ui design","ux design","figma","adobe xd",
+  "photoshop","illustrator","graphic design",
+  "wireframing","prototyping",
+
+  // Engineering
+  "autocad","solidworks","matlab","embedded systems",
+  "circuit design","mechanical design","civil engineering",
+  "structural analysis","cad","cam"
+
+];
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -16,6 +61,10 @@ app.post("/analyze", upload.single("resume"), async (req, res) => {
   const pdfData = await pdfParse(dataBuffer);
 
   const text = pdfData.text.toLowerCase();
+  const tokenizer = new natural.WordTokenizer();
+  const tokens = tokenizer.tokenize(text);
+  const bigrams = natural.NGrams.bigrams(tokens);
+  const phraseSkills = bigrams.map(pair => pair.join(" "));
 
   const sections = ["education","experience","projects","skills","certifications"];
 
@@ -42,12 +91,8 @@ const jobKeywords = jobDescription
 
 const uniqueKeywords = [...new Set(jobKeywords)];
 
-const foundSkills = uniqueKeywords.filter(keyword =>
-  text.includes(keyword)
-);
-
-const missingSkills = uniqueKeywords.filter(keyword =>
-  !text.includes(keyword)
+const detectedSkills = skillDictionary.filter(skill =>
+  text.includes(skill)
 );
   const atsScore = uniqueKeywords.length
   ? Math.round((foundSkills.length / uniqueKeywords.length) * 100)
@@ -62,7 +107,7 @@ const missingSkills = uniqueKeywords.filter(keyword =>
     : 0;
 
   res.json({
-    detectedSkills: foundSkills,
+    detectedSkills: detectedSkills,
     missingSkills: missingSkills,
     atsScore: atsScore,
     matchScore: matchScore,

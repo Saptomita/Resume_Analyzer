@@ -94,6 +94,9 @@ const uniqueKeywords = [...new Set(jobKeywords)];
 const detectedSkills = skillDictionary.filter(skill =>
   text.includes(skill)
 );
+const missingSkills = skillDictionary.filter(
+  skill => !detectedSkills.includes(skill)
+);
   const atsScore = uniqueKeywords.length
   ? Math.round((foundSkills.length / uniqueKeywords.length) * 100)
   : 0;

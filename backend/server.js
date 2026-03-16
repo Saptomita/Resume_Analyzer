@@ -57,69 +57,72 @@ const upload = multer({ dest: "uploads/" });
 
 app.post("/analyze", upload.single("resume"), async (req, res) => {
 
-  const dataBuffer = fs.readFileSync(req.file.path);
-  const pdfData = await pdfParse(dataBuffer);
+  try {
 
-  const text = pdfData.text.toLowerCase();
-  const tokenizer = new natural.WordTokenizer();
-  const tokens = tokenizer.tokenize(text);
-  const bigrams = natural.NGrams.bigrams(tokens);
-  const phraseSkills = bigrams.map(pair => pair.join(" "));
+    const dataBuffer = fs.readFileSync(req.file.path);
+    const pdfData = await pdfParse(dataBuffer);
 
-  const sections = ["education","experience","projects","skills","certifications"];
+    const text = pdfData.text.toLowerCase();
 
-  const foundSections = sections.filter(section =>
-  text.includes(section));
-  const missingSections = sections.filter(section =>
-  !text.includes(section));
+    const sections = ["education","experience","projects","skills","certifications"];
 
-  const jobDescription = req.body.jobDescription?.toLowerCase() || "";
+    const foundSections = sections.filter(section => text.includes(section));
+    const missingSections = sections.filter(section => !text.includes(section));
 
-  const stopWords = [
-  "and","the","with","for","a","to","of","in","on","at","is","are",
-  "we","looking","candidate","should","must","have","knowledge",
-  "experience","strong","good","motivated","detail","professional",
-  "ability","skills","responsible","work","team"
-];
+    const jobDescription = req.body.jobDescription?.toLowerCase() || "";
 
-const jobKeywords = jobDescription
-  .toLowerCase()
-  .split(/\W+/)
-  .filter(word =>
-    word.length > 3 && !stopWords.includes(word)
-  );
+    const stopWords = [
+      "and","the","with","for","a","to","of","in","on","at","is","are",
+      "we","looking","candidate","should","must","have","knowledge",
+      "experience","strong","good","motivated","detail","professional",
+      "ability","skills","responsible","work","team"
+    ];
 
-const uniqueKeywords = [...new Set(jobKeywords)];
+    const jobKeywords = jobDescription
+      .split(/\W+/)
+      .filter(word => word.length > 3 && !stopWords.includes(word));
 
-const detectedSkills = skillDictionary.filter(skill =>
-  text.includes(skill)
-);
-const missingSkills = skillDictionary.filter(
-  skill => !detectedSkills.includes(skill)
-);
-  const atsScore = uniqueKeywords.length
-  ? Math.round((matchedKeywords.length / uniqueKeywords.length) * 100)
-  : 0;
+    const uniqueKeywords = [...new Set(jobKeywords)];
 
+    const matchedKeywords = jobKeywords.filter(word =>
+      text.includes(word)
+    );
 
-  const matchedKeywords = jobKeywords.filter(word =>
-    text.includes(word));
+    const atsScore = uniqueKeywords.length
+      ? Math.round((matchedKeywords.length / uniqueKeywords.length) * 100)
+      : 0;
 
-  const matchScore = jobKeywords.length
-    ? Math.round((matchedKeywords.length / jobKeywords.length) * 100)
-    : 0;
+    const matchScore = jobKeywords.length
+      ? Math.round((matchedKeywords.length / jobKeywords.length) * 100)
+      : 0;
 
-  res.json({
-    detectedSkills: detectedSkills,
-    missingSkills: missingSkills,
-    atsScore: atsScore,
-    matchScore: matchScore,
-    foundSections: foundSections, 
-    missingSections: missingSections,
-  });
-});
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+    const detectedSkills = skillDictionary.filter(skill =>
+      text.includes(skill)
+    );
+
+    const missingSkills = skillDictionary.filter(skill =>
+      !detectedSkills.includes(skill)
+    );
+
+    res.json({
+      detectedSkills,
+      missingSkills,
+      atsScore,
+      matchScore,
+      foundSections,
+      missingSections
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      error: "Resume analysis failed"
+    });
+
+  }
+
 });
 
 

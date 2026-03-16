@@ -26,14 +26,21 @@ app.post("/analyze", upload.single("resume"), async (req, res) => {
 
   const jobDescription = req.body.jobDescription?.toLowerCase() || "";
 
-  const skills = ["javascript","react","node","python","html","css","sql"];
+  const stopWords = ["and","the","with","for","a","to","of","in","on","at","is"];
 
-  const foundSkills = skills.filter(skill => text.includes(skill));
-  const missingSkills = skills.filter(skill => !text.includes(skill));
+const jobKeywords = jobDescription
+  .split(/\W+/)
+  .filter(word => word.length > 2 && !stopWords.includes(word));
 
-  const atsScore = Math.round((foundSkills.length / skills.length) * 100);
+const uniqueKeywords = [...new Set(jobKeywords)];
 
-  const jobKeywords = jobDescription.split(/\W+/);
+const foundSkills = uniqueKeywords.filter(word => text.includes(word));
+const missingSkills = uniqueKeywords.filter(word => !text.includes(word));
+
+  const atsScore = uniqueKeywords.length
+  ? Math.round((foundSkills.length / uniqueKeywords.length) * 100)
+  : 0;
+
 
   const matchedKeywords = jobKeywords.filter(word =>
     text.includes(word));

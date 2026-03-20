@@ -73,8 +73,8 @@ function App() {
     doc.save("resume-report.pdf");
   };
    let status =
-      result.atsScore < 40. ? "Rejected ❌" :
-      result.atsScore < 70 ? "Average ⚠️" :
+      result?.atsScore < 40 ? "Rejected ❌" :
+      result?.atsScore < 70 ? "Average ⚠️" :
       "Shortlisted ✅";
 
 
@@ -139,6 +139,10 @@ function App() {
               <div className="card">
                 <h3>ATS Score</h3>
 
+                <p style={{ fontWeight: "bold", marginTop: "5px" }}>
+                  {status}
+                </p>
+
                 <div className="progress">
                   <div
                     className="progress-bar"
@@ -156,6 +160,8 @@ function App() {
                   </div>
                 </div>
               </div>
+
+              
 
               {/* JOB MATCH SCORE */}
               <div className="card">
@@ -209,7 +215,7 @@ function App() {
                 <p>Present:</p>
 
                 <div className="tags">
-                  {result.foundSections.map((section,i)=>(
+                  {(result.foundSections || []).map((section,i)=>(
                     <span className="tag" key={i}>{section}</span>
                   ))}
                 </div>
@@ -217,7 +223,7 @@ function App() {
                 <p>Missing:</p>
 
                 <div className="tags">
-                  {result.missingSections.map((section,i)=>(
+                  {(result.missingSections || []).map((section,i)=>(
                     <span className="tag missing" key={i}>{section}</span>
                   ))}
                 </div>

@@ -59,10 +59,19 @@ app.post("/analyze", upload.single("resume"), async (req, res) => {
 
   try {
 
+    if (!req.file) {
+  return res.status(400).json({
+    error: "No resume file uploaded"
+  });
+  }
+
     const dataBuffer = fs.readFileSync(req.file.path);
     const pdfData = await pdfParse(dataBuffer);
 
-    const text = pdfData.text.toLowerCase();
+    const text = pdfData.text
+      .toLowerCase()
+      .replace(/\n/g, " ")
+      .replace(/\s+/g, " ");
 
     const sections = ["education","experience","projects","skills","certifications"];
 
@@ -88,9 +97,34 @@ app.post("/analyze", upload.single("resume"), async (req, res) => {
       text.includes(word)
     );
 
-    const atsScore = uniqueKeywords.length
-      ? Math.round((matchedKeywords.length / uniqueKeywords.length) * 100)
-      : 0;
+    // Skill score
+const skillScore = requiredSkills.length
+  ? (detectedSkills.filter(skill => requiredSkills.includes(skill)).length / requiredSkills.length) * 100
+  : 0;
+
+// Section score
+const sectionScore = (foundSections.length / sections.length) * 100;
+
+// Keyword score
+const keywordScore = uniqueKeywords.length
+  ? (matchedKeywords.length / uniqueKeywords.length) * 100
+  : 0;
+
+// Base ATS score
+let atsScore = Math.round(
+  (skillScore * 0.6) +   // ↑ increase importance
+  (sectionScore * 0.2) + // ↓ reduce importance
+  (keywordScore * 0.2)
+);
+
+// HARD REJECTION LOGIC
+if (
+  detectedSkills.length === 0 ||
+  requiredSkills.length === 0 ||
+  skillScore < 30
+) {
+  atsScore = Math.min(atsScore, 35);
+}
 
     const matchScore = jobKeywords.length
       ? Math.round((matchedKeywords.length / jobKeywords.length) * 100)
@@ -100,10 +134,15 @@ app.post("/analyze", upload.single("resume"), async (req, res) => {
       text.includes(skill)
     );
 
-    const missingSkills = skillDictionary.filter(skill =>
-      !detectedSkills.includes(skill)
-    );
+    const requiredSkills = skillDictionary.filter(skill => {
+      const skillWords = skill.split(" ");
+      return skillWords.some(word => jobDescription.includes(word));
+     });
 
+    const missingSkills = requiredSkills.filter(skill =>
+      !detectedSkills.includes(skill)
+     );
+     fs.unlinkSync(req.file.path);
     res.json({
       detectedSkills,
       missingSkills,

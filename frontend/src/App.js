@@ -128,6 +128,10 @@ function App() {
           <div className="results">
 
             <div className="dashboard">
+              let status =
+                result.atsScore < 40 ? "Rejected ❌" :
+                result.atsScore < 70 ? "Average ⚠️" :
+                "Shortlisted ✅";
 
               {/* ATS SCORE */}
               <div className="card">
@@ -236,3 +240,5 @@ function App() {
 }
 
 export default App;
+
+return

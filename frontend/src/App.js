@@ -46,7 +46,21 @@ function App() {
 
     console.log("API Response:", data);
 
-    setResult(data);
+    if (!data || data.error) {
+  console.error("Backend error:", data);
+  setResult(null);
+  setLoading(false);
+  return;
+}
+
+setResult({
+  detectedSkills: data.detectedSkills || [],
+  missingSkills: data.missingSkills || [],
+  foundSections: data.foundSections || [],
+  missingSections: data.missingSections || [],
+  atsScore: data.atsScore || 0,
+  matchScore: data.matchScore || 0
+});
 
   } catch (error) {
     console.error("API Error:", error);
@@ -65,18 +79,20 @@ function App() {
     doc.text(`Job Match Score: ${result.matchScore}%`,20,50);
 
     doc.text("Detected Skills:",20,70);
-    doc.text(result.detectedSkills.join(", "),20,80);
+    doc.text((result?.detectedSkills || []).join(", "),20,80);
 
     doc.text("Missing Skills:",20,100);
-    doc.text(result.missingSkills.join(", "),20,110);
-
+    doc.text((result?.detectedSkills || []).join(", "),20,80);
     doc.save("resume-report.pdf");
   };
-   let status =
-      result?.atsScore < 40 ? "Rejected ❌" :
-      result?.atsScore < 70 ? "Average ⚠️" :
-      "Shortlisted ✅";
+   let status = "";
 
+if (result) {
+  status =
+    result.atsScore < 40 ? "Rejected ❌" :
+    result.atsScore < 70 ? "Average ⚠️" :
+    "Shortlisted ✅";
+}
 
   return (
 

@@ -97,39 +97,6 @@ app.post("/analyze", upload.single("resume"), async (req, res) => {
       text.includes(word)
     );
 
-    // Skill score
-const skillScore = requiredSkills.length
-  ? (detectedSkills.filter(skill => requiredSkills.includes(skill)).length / requiredSkills.length) * 100
-  : 0;
-
-// Section score
-const sectionScore = (foundSections.length / sections.length) * 100;
-
-// Keyword score
-const keywordScore = uniqueKeywords.length
-  ? (matchedKeywords.length / uniqueKeywords.length) * 100
-  : 0;
-
-// Base ATS score
-let atsScore = Math.round(
-  (skillScore * 0.6) +   // ↑ increase importance
-  (sectionScore * 0.2) + // ↓ reduce importance
-  (keywordScore * 0.2)
-);
-
-// HARD REJECTION LOGIC
-if (
-  detectedSkills.length === 0 ||
-  requiredSkills.length === 0 ||
-  skillScore < 30
-) {
-  atsScore = Math.min(atsScore, 35);
-}
-
-    const matchScore = jobKeywords.length
-      ? Math.round((matchedKeywords.length / jobKeywords.length) * 100)
-      : 0;
-
     const detectedSkills = skillDictionary.filter(skill =>
       text.includes(skill)
     );
@@ -142,7 +109,44 @@ if (
     const missingSkills = requiredSkills.filter(skill =>
       !detectedSkills.includes(skill)
      );
-     fs.unlinkSync(req.file.path);
+
+    // Skill score
+    const skillScore = requiredSkills.length
+      ? (detectedSkills.filter(skill => requiredSkills.includes(skill)).length / requiredSkills.length) * 100
+      : 0;
+
+    // Section score
+    const sectionScore = (foundSections.length / sections.length) * 100;
+
+    // Keyword score
+    const keywordScore = uniqueKeywords.length
+      ? (matchedKeywords.length / uniqueKeywords.length) * 100
+      : 0;
+
+    // Base ATS score
+    let atsScore = Math.round(
+      (skillScore * 0.6) +   // ↑ increase importance
+      (sectionScore * 0.2) + // ↓ reduce importance
+      (keywordScore * 0.2)
+    );
+
+    // HARD REJECTION LOGIC
+    if (
+      detectedSkills.length === 0 ||
+      requiredSkills.length === 0 ||
+      skillScore < 30
+    ) {
+      atsScore = Math.min(atsScore, 35);
+    }
+
+    const matchScore = jobKeywords.length
+      ? Math.round((matchedKeywords.length / jobKeywords.length) * 100)
+      : 0;
+
+    
+    if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+    }
     res.json({
       detectedSkills,
       missingSkills,

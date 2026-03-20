@@ -48,6 +48,7 @@ function App() {
 
     if (!data || data.error) {
   console.error("Backend error:", data);
+  alert(data.error || "Something went wrong");
   setResult(null);
   setLoading(false);
   return;
@@ -82,7 +83,7 @@ setResult({
     doc.text((result?.detectedSkills || []).join(", "),20,80);
 
     doc.text("Missing Skills:",20,100);
-    doc.text((result?.detectedSkills || []).join(", "),20,80);
+    doc.text((result?.missingSkills || []).join(", "),20,110);
     doc.save("resume-report.pdf");
   };
    let status = "";
@@ -144,7 +145,7 @@ if (result) {
 
         {loading && <div className="loader"></div>}
 
-        {result && (
+        {result && result.atsScore !== undefined &&(
 
           <div className="results">
 

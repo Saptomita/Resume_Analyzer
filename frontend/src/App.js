@@ -72,6 +72,11 @@ function App() {
 
     doc.save("resume-report.pdf");
   };
+   let status =
+      result.atsScore < 40. ? "Rejected ❌" :
+      result.atsScore < 70 ? "Average ⚠️" :
+      "Shortlisted ✅";
+
 
   return (
 
@@ -128,10 +133,7 @@ function App() {
           <div className="results">
 
             <div className="dashboard">
-              let status =
-                result.atsScore < 40 ? "Rejected ❌" :
-                result.atsScore < 70 ? "Average ⚠️" :
-                "Shortlisted ✅";
+              
 
               {/* ATS SCORE */}
               <div className="card">
